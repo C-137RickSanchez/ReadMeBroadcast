@@ -760,43 +760,43 @@ function ephemeris = ephemeris_data()
 % Sat Clock drift(sec/sec)       : dClockDrift
 % Sat Clock drift rate (sec/sec2): dClockDriftRate
 %
-% BROADCAST ORBIT - 1
+% Broadcast item 1
 % IDOE Issue of Data, Ephemeris  : dIDOE
 % Crs (meters)                   : dCrs
 % Delta n (radians/sec)          : dDeltaN
 % M0 (radians)                   : dM0
 %
-% BROADCAST ORBIT - 2
+% Broadcast item 2
 % Cuc (radians)                  : dCuc
 % e Eccenricity                  : dEccent
 % Cus (radians)                  : dCus
 % sqrt(A) (sqrt(m))              : dSqrtA
 %
-% BROADCAST ORBIT - 3
+% Broadcast item  3
 % Toe Time of Ephemeris (sec of GPS week): dToe
 % Cic (radians)                  : dCic
 % OMEGA (radians)                : dOMEGA
 % Cis (radians)                  : dCis
 %
-% BROADCAST ORBIT - 4
+% Broadcast item  4
 % i0                             : di0
 % Crc (radians)                  : dCrc
 % omega (radians)                : dOmega
 % OMEGA Dot (radians)            : dOMEGADot
 %
-% BROADCAST ORBIT - 5
+% Broadcast item 5
 % Idot                           : dIdot
 % Codes on L2 channel            : dCodeOnL2
 % GPS Week # (to go with TOE)    : dGpsWeek
 % L2 P data flag                 : dPDataFlag
 %
-% BROADCAST ORBIT - 6
+% Broadcast item 6
 % SV Accuracy (meters)           : dSVaccur
 % SV health   (MSB only)         : dSVhealth
 % TGD                            : dTGD
 % IODC Issue of Data, Clock      : dIODC
 %
-% BROADCAST ORBIT - 7
+% Broadcast item 7
 % Transmission time of message   : dTransTime
 % Spare1                         : dSpare1
 % Spare2                         : dSpare2

@@ -56,14 +56,16 @@ classdef Coord_Eph
             %   obj - ephemerides coordinate instance 
             %   data - ephemerides data 
             %   RINEX_fname - filename of the RINEX file
-            %   time_interval - the time intervall
+            %   time_interval - the time interval
             %
             % Other functions that are called:
             %
             %   broadcast_coord_all(RINEX_fname,obsTime)
             %   read_rinex(RINEX_fname)
-            %   
-                fprintf('broadcast_position_line63');
+            %
+            
+             % Printer that helps in debugging 
+                fprintf('broadcast_position_line_68');
                 fprintf('\n');
                 [header,data] = read_rinex(RINEX_fname,coord_obj);  
                 [n,m]=size(data);
@@ -73,10 +75,9 @@ classdef Coord_Eph
                 % Find the first and last Epoch 
                 first_time_flag = 0;
                 for i=1:n
-                    for j=1:m 
+                    for j=1:m
+                        % check whether or not any data is apparent for the satellite  
                         check = arrayfun(@(x) numel(x.iEpochYear), data(i,j));
-                        %check = structfun(@double, data(i,j), 'uniformoutput', 0);
-                        %check = cell2struct(cellfun(@double,struct2cell(data(i,j)),'uni',false),fieldnames(data(i,j)),1);
                         if check<1e-13
                            % formatSpec = 'An empty array for sat PRN:%d has been spotted.';
                            % A1 = data(i,j).iPRN;
@@ -90,13 +91,8 @@ classdef Coord_Eph
                         BB(4) = get(data(i,j) , 'iEpochHour');               
                         BB(5) = get(data(i,j) , 'iEpochMinute');        
                         BB(6) = get(data(i,j) , 'iEpochSecond');
-                        % check whether or not any data is apparent for the satellite    
-                        %if abs(BB(1)) < 1e-13 
-                        %    continue;
-                        %end 
                         % time to Julian date
-                        dJD = date_time(BB);  
-                        %if i==1 & j==1  %ORIGINAL
+                        dJD = date_time(BB);
                         if first_time_flag ==0
                             dFirstEpoch = dJD;
                             dLastEpoch = dJD;
@@ -105,7 +101,7 @@ classdef Coord_Eph
                             dFirstEpoch = dJD;               
                         elseif (dJD - dLastEpoch) > 0             
                             dLastEpoch = dJD;               
-                        end           
+                        end
                     end
                 end    
             % start of the interval
@@ -135,7 +131,7 @@ classdef Coord_Eph
                             obj.sat_clk_corr(prn,i) =  vXYZ(p,4);
                             obj.group_delay(prn,i) =  vXYZ(p,5);
                     end
-                    epo = epo +  TimeSpan;
+                    epo = epo + time_interval;
                 end
             end
 
@@ -157,10 +153,11 @@ classdef Coord_Eph
             %
             % 
             % DIFLIM = 3*3600; %maximum allowed time difference between toe and epoch
-            % Initialise  
             
-            fprintf('broadcast_coord_all_line157');
+            % Printer that helps in debugging 
+            fprintf('broadcast_coord_all_line_158');
             fprintf('\n');
+            % Initialise  
             [n m]=size(mData);
             XYZ=[];
             vCoordinateVector = zeros(32,5);  %allocate space for 32 satellites
@@ -197,7 +194,8 @@ classdef Coord_Eph
                 A=[];
                 MinDiff = 1e15;  %Time difference in [s]
                 MinIdx = 0;  %index to the closest epoch
-                for j=1:m  %loop over toe 
+                for j=1:m  %loop over toe
+                    % Check whether or not the satellite data exists
                     check = arrayfun(@(x) numel(x.iEpochYear), mData(i,j));
                     if abs(check) < 1e-13
                         % NoData = 1;
@@ -209,11 +207,7 @@ classdef Coord_Eph
                     B(4) = get(mData(i,j) , 'iEpochHour');               
                     B(5) = get(mData(i,j) , 'iEpochMinute');        
                     B(6) = get(mData(i,j) , 'iEpochSecond');    
-                    %if abs(B(1)) < 1e-13  %No data
-                        %NoData = 1;
-                   %     continue;
-                    %end
-
+                   
                     dJDSat = date_time(B); % Convert the time  
                     %dJDSat_is_date_time=isa(dJDSat,'date_time')
                     %epoch_is_a_date_time=isa(epoch,'date_time')
@@ -257,8 +251,9 @@ classdef Coord_Eph
             %       date_time(y, mo, d, ho, min, sec) - date_time object
             %
             
-             fprintf('calc_coord_line239')
-             fprintf('\n');
+            % Printer that helps in debugging 
+            % fprintf('calc_coord_line_255')
+            % fprintf('\n');
              epoch=coord_obj.time(end);
             % PRN/EPOCH/SC CLK
                 SatNr=get(obs,'iPRN');
@@ -401,12 +396,13 @@ classdef Coord_Eph
             %
             % Other functions that are called:
             %       read_rinex(RINEX_fname)
-            %
-            % Initialise
-                fprintf('read_broadcast_line344');
+            
+            % Printer that helps in debugging 
+                fprintf('read_broadcast_line_401');
                 fprintf('\n');
                 [header,data] = read_rinex(RINEX_fname);
                 [n m]=size(data);
+            % Initialise
                 dLastEpoch =[];
                 dFirstEpoch = [];
             % Find the first and last Epoch 
@@ -483,9 +479,11 @@ classdef Coord_Eph
             % Other functions that are called:
             %   RINEX_header - ephemerides header  
             %
-            % Opnening the RINEX file
-                fprintf('read_rinex_line461');
+            
+            % Printer that helps in debugging
+                fprintf('read_rinex_line_484');
                 fprintf('\n');
+            % Opnening the RINEX file
                 fid=fopen(RINEX_fname);
             % Initialise
                 rad=0; % Start value Counter
@@ -594,44 +592,44 @@ classdef Coord_Eph
                         B=set(B,'dClockDriftRate',str2double(strrep(tline(61:79),'D','e')));   
                     % Checking if there is any observation data in the instance
                     % and return with a boolean in order to inform that
-                    % there actually is data inside te instance
-                    % Broadcast item 1
+                    % there actually is data inside the instance
+                    % Broadcast line 1
                         tline= fgetl(fid);rad=rad+1;
                         B=set(B,'dIDOE',str2double(strrep(tline(4:22),'D','e')));    
                         B=set(B,'dCrs',str2double(strrep(tline(23:41),'D','e')));
                         B=set(B,'dDeltaN',str2double(strrep(tline(42:60),'D','e')));
                         B=set(B,'dM0',str2double(strrep(tline(61:79),'D','e')));  
-                    % Broadcast item 2
+                    % Broadcast line 2
                         tline= fgetl(fid);rad=rad+1;
                         B=set(B,'dCuc',str2double(strrep(tline(4:22),'D','e')));    
                         B=set(B,'dEccent',str2double(strrep(tline(23:41),'D','e')));
                         B=set(B,'dCus',str2double(strrep(tline(42:60),'D','e')));
                         B=set(B,'dSqrtA',str2double(strrep(tline(61:79),'D','e')));
-                    % Broadcast item 3
+                    % Broadcast line 3
                         tline= fgetl(fid);rad=rad+1;
                         B=set(B,'dToe',str2double(strrep(tline(4:22),'D','e')));    
                         B=set(B,'dCic',str2double(strrep(tline(23:41),'D','e')));
                         B=set(B,'dOMEGA',str2double(strrep(tline(42:60),'D','e')));
                         B=set(B,'dCis',str2double(strrep(tline(61:79),'D','e')));
-                     % Broadcast item 4
+                     % Broadcast line 4
                         tline= fgetl(fid);rad=rad+1;
                         B=set(B,'di0',str2double(strrep(tline(4:22),'D','e')));    
                         B=set(B,'dCrc',str2double(strrep(tline(23:41),'D','e')));
                         B=set(B,'dOmega',str2double(strrep(tline(42:60),'D','e')));
                         B=set(B,'dOMEGADot',str2double(strrep(tline(61:79),'D','e')));
-                    % Broadcast item 5
+                    % Broadcast line 5
                         tline= fgetl(fid);rad=rad+1;
                         B=set(B,'dIdot',str2double(strrep(tline(4:22),'D','e')));    
                         B=set(B,'dCodeOnL2',str2double(strrep(tline(23:41),'D','e')));
                         B=set(B,'dGpsWeek',str2double(strrep(tline(42:60),'D','e')));
                         B=set(B,'dPDataFlag',str2double(strrep(tline(61:79),'D','e')));
-                    % Broadcast item 6
+                    % Broadcast line 6
                         tline= fgetl(fid);rad=rad+1;
                         B=set(B,'dSVaccur',str2double(strrep(tline(4:22),'D','e')));    
                         B=set(B,'dSVhealth',str2double(strrep(tline(23:41),'D','e')));
                         B=set(B,'dTGD',str2double(strrep(tline(42:60),'D','e')));  
                         B=set(B,'dIODC',str2double(strrep(tline(61:79),'D','e')));
-                    % Broadcast item 7
+                    % Broadcast line 7
                         tline= fgetl(fid);rad=rad+1;
                         if length(tline)>78
                             B=set(B,'dTransTime',str2double(strrep(tline(4:22),'D','e')));
@@ -760,43 +758,43 @@ function ephemeris = ephemeris_data()
 % Sat Clock drift(sec/sec)       : dClockDrift
 % Sat Clock drift rate (sec/sec2): dClockDriftRate
 %
-% Broadcast item 1
+% BROADCAST ORBIT - line 1
 % IDOE Issue of Data, Ephemeris  : dIDOE
 % Crs (meters)                   : dCrs
 % Delta n (radians/sec)          : dDeltaN
 % M0 (radians)                   : dM0
 %
-% Broadcast item 2
+% BROADCAST ORBIT - line 2
 % Cuc (radians)                  : dCuc
 % e Eccenricity                  : dEccent
 % Cus (radians)                  : dCus
 % sqrt(A) (sqrt(m))              : dSqrtA
 %
-% Broadcast item  3
+% BROADCAST ORBIT - line 3
 % Toe Time of Ephemeris (sec of GPS week): dToe
 % Cic (radians)                  : dCic
 % OMEGA (radians)                : dOMEGA
 % Cis (radians)                  : dCis
 %
-% Broadcast item  4
+% BROADCAST ORBIT - line 4
 % i0                             : di0
 % Crc (radians)                  : dCrc
 % omega (radians)                : dOmega
 % OMEGA Dot (radians)            : dOMEGADot
 %
-% Broadcast item 5
+% BROADCAST ORBIT - line 5
 % Idot                           : dIdot
 % Codes on L2 channel            : dCodeOnL2
 % GPS Week # (to go with TOE)    : dGpsWeek
 % L2 P data flag                 : dPDataFlag
 %
-% Broadcast item 6
+% BROADCAST ORBIT - line 6
 % SV Accuracy (meters)           : dSVaccur
 % SV health   (MSB only)         : dSVhealth
 % TGD                            : dTGD
 % IODC Issue of Data, Clock      : dIODC
 %
-% Broadcast item 7
+% BROADCAST ORBIT - line 7
 % Transmission time of message   : dTransTime
 % Spare1                         : dSpare1
 % Spare2                         : dSpare2

@@ -133,8 +133,11 @@ classdef Coord_Eph
                     end
                     epo = epo + time_interval;
                 end
+               % file_export functionality is disabled as it does not work
+               % yet
+               % navigation_solution_file = export_to_file('navigation_solution_test.txt',Nint,dStart,coord_obj);
             end
-
+        
             function vCoordinateVector = broadcast_coord_all(mData,coord_obj)
             % This function calculates the coordinates for all available satellites from a given RINEX file
             % 
@@ -245,15 +248,14 @@ classdef Coord_Eph
             %   ds       - delta SV PRN code phase time offset in seconds
             %   TGD      - Differential Group delay in seconds
             %   obs     - observation vector
-            %   epoch - The current observation time in reciver time
+            %   epoch - The current observation time in receiver time
             %
             % Other functions that are called:
             %       date_time(y, mo, d, ho, min, sec) - date_time object
             %
             
             % Printer that helps in debugging 
-            % fprintf('calc_coord_line_255')
-            % fprintf('\n');
+            % fprintf('calc_coord_line_255 \n');
              epoch=coord_obj.time(end);
             % PRN/EPOCH/SC CLK
                 SatNr=get(obs,'iPRN');
@@ -379,91 +381,7 @@ classdef Coord_Eph
                    
                  clear epoch;
             end
-            
-            function [A, data] = read_broadcast(coord_obj,RINEX_fname,dInterval)
-            % This function reads broadcast ephemeris from a RINEX file
-            % and calculates the satellite position with the wanted intervall
-            %
-            % To call the function use:
-            %
-            %      [A, data] = read_broadcast(coord_obj,sFileName,dInterval)
-            %
-            % where
-            %   coord_obj - Coord_Eph instance 
-            %   data - ephemerides data 
-            %   sFileName - filename of the RINEX file
-            %   dInterval - the time intervall
-            %
-            % Other functions that are called:
-            %       read_rinex(RINEX_fname)
-            
-            % Printer that helps in debugging 
-                fprintf('read_broadcast_line_401');
-                fprintf('\n');
-                [header,data] = read_rinex(RINEX_fname);
-                [n m]=size(data);
-            % Initialise
-                dLastEpoch =[];
-                dFirstEpoch = [];
-            % Find the first and last Epoch 
-                first_time_flag = 0;  % indicates that the process runs for the first time
-                for i=1:n
-                    for j=1:m
-                        check = arrayfun(@(x) numel(x.iEpochYear), mData(i,j));
-                        if abs(check) < 1e-13 % no data for this satellite
-                            continue;
-                        end
-                        BB(1) = get(data(i,j) , 'iEpochYear');
-                        BB(2) = get(data(i,j) , 'iEpochMonth');                        
-                        BB(3) = get(data(i,j) , 'iEpochDay');               
-                        BB(4) = get(data(i,j) , 'iEpochHour');               
-                        BB(5) = get(data(i,j) , 'iEpochMinute');        
-                        BB(6) = get(data(i,j) , 'iEpochSecond');    
-                        %if abs(BB(1)) < 1e-13 % no data for this satellite
-                        %    continue;
-                        %end
-                        dJD = DateTime(BB); % Convert the time to JD
-                        %if i==1 & j==1  %ORIGINAL
-                        if first_time_flag ==0
-                            dFirstEpoch = dJD;
-                            dLastEpoch = dJD;
-                            first_time_flag=1;
-                        elseif (dJD - dFirstEpoch) < 0  
-                            dFirstEpoch = dJD;
-                        elseif (dJD - dLastEpoch) > 0  
-                            dLastEpoch = dJD;
-                        end  
-                    end
-                end    
-            % Define start of the interval
-                dStart = dFirstEpoch - 3*3600;
-            % Define the end of the interval
-                dEnd = dLastEpoch + 3*3600;
-            %Time span in [s]
-                TimeSpan = dEnd - dStart;   
-            %Number of intervals    
-                Nint = floor(TimeSpan/dInterval);    
-                data(1,1) = set(data(1,1), 'dtStart', dStart);
-                data(1,1) = set(data(1,1), 'dtEnd', dEnd);
-            % Calculate satellite coordinates for each interval
-                epo = dStart; % counter
-                for i = 1:Nint
-                    coord_obj.dTime(i) = epo;
-                    % Here should the resulult be placed in a CoordEph class
-                    vXYZ = beEphCoordCalc(data, epo);
-                    [iRow,iCol] = size(vXYZ);       
-                    for p=1:iRow
-                            prn = p;
-                            coord_obj.iPRN(prn,i) = prn;
-                            coord_obj.x(prn,i)   =  vXYZ(p,1);
-                            coord_obj.y(prn,i)   =  vXYZ(p,2);
-                            coord_obj.z(prn,i)   =  vXYZ(p,3);
-                            coord_obj.sat_clk_corr(prn,i) =  vXYZ(p,4);
-                            coord_obj.group_delay(prn,i) =  vXYZ(p,5);
-                    end
-                    epo = epo +  dInterval;
-                end
-            end
+           
             function [Header,out] = read_rinex(RINEX_fname,coord_obj)
             % This function reads the header and ephemeris from RINEX format
             %
@@ -845,6 +763,57 @@ ephemeris.iPRN=0;
    
 
 end
+function dataFile = export_to_file(fname,number_of_intervals,time_interval,dStart,coord_obj)
+            % This function checks for the existence of the file with the given file name
+            % and saves Kepler elements on a text file
+            %
+            % Function call:
+            %
+            %     dataFile = export_to_file(fname,number_of_intervals,dStart,coord_obj)
+            %
+            % Parameters and attributes: 
+            % 
+            %    fname - file name under which the data is saved
+            %    number_of_intervals - total number of intervals between epochs
+            %    dStart - inital epoch of the Coord_eph instance
+            %    coord_obj  - Coord_Eph instance
+            
+            % Printer that helps in debugging
+                fprintf('export_to_file_line_865\n');
+                exists_flag=0;
+                while exists_flag == 0    
+                    if exists_flag == 1
+                        fprintf('The file already exists.\n');
+                        continue;
+                    else
+                        fopen(fname,'wt');
+                        fprintf('Creating the file...\n');
+                        exists_flag = 1;
+                    end
+                end    
+                    
+                fID = fopen(fname,'wt');
+                fprintf(fID,'\t%s\n', fname);
+                fprintf(fID,'\tcreated by ReadMeBroadcast\n');
+                fprintf(fID,'Number of intervals: %d\n',number_of_intervals);
+                epo=dStart;
+                for i = 1:number_of_intervals
+                    
+                    [iRow,~] = size(coord_obj.x);       
+                    for p=1:iRow
+                        fprintf(fID,'-------------------------------------\n');
+                        fprintf(fID,'EPOCH -> %d\n',coord_obj.time(i));
+                        fprintf(fID,'-------------------------------------\n');
+                        fprintf(fID,'PRN                            : %d\n',coord_coord_obj.PRN(prn,i));
+                        fprintf(fID,'Coordinates                    : %d %d %d\n',coord_obj.x(prn,i),coord_obj.y(prn,i),coord_obj.z(prn,i));
+                        fprintf(fID,'Satellite Clock Correction     : %d\n',coord_obj.sat_clk_corr(prn,i));
+                        fprintf(fID,'Time Group Delay               : %d\n',coord_obj.group_delay(prn,i));
+                        fprintf(fID,'-------------------------------------\n');
+                    end
+                                epo = epo + time_interval;
+                end
+                fclose(fID);
+            end
  function result = get(b,par)
       result =  b.(par);
   end
